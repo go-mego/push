@@ -6,6 +6,7 @@ Server Push 是基於 HTTP/2 協定的檔案主動推送，這能夠讓你主動
 
 * [安裝方式](#安裝方式)
 * [使用方式](#使用方式)
+	* [推送檔案](#推送檔案)
 
 # 安裝方式
 
@@ -17,7 +18,7 @@ $ go get github.com/go-mego/push
 
 # 使用方式
 
-先透過 `push.New()` 初始化一個 Server Push 推送中介軟體，並將其傳入 Mego 中的 `Use()` 函式來表明要套用到該引擎中供稍後的路由內使用。以 `Push` 並指定靜態檔案來開始推送。
+先透過 `push.New()` 初始化一個 Server Push 推送中介軟體，並將其傳入 Mego 中的 `Use()` 函式來表明要套用到該引擎中供稍後的路由內使用。
 
 ```go
 package main
@@ -28,10 +29,34 @@ import (
 )
 
 func main() {
-    m := mego.New()
-    // 將 Server Push 套用到全域中介軟體裡供稍後在路由中使用。
-    m.Use(push.New())
-	m.Get("/", func(p *push.Pusher) string {
+	m := mego.New()
+	// 將 Server Push 套用到全域中介軟體裡供稍後在路由中使用。
+	m.Use(push.New())
+	m.Run()
+}
+```
+
+Server Push 中介軟體同時也能夠僅用於單個路由中。
+
+```go
+func main() {
+	m := mego.New()
+	// 將 Server Push 套用至單一路由中。
+	m.GET("/", push.New(), func(p *push.Pusher) string {
+		// ...
+	})
+	m.Run()
+}
+```
+
+## 推送檔案
+
+以 `Push` 並指定靜態檔案來開始推送。
+
+```go
+func main() {
+	m := mego.New()
+	m.GET("/", push.New(), func(p *push.Pusher) string {
 		// 透過 `Push` 來主動向客戶端推送指定的靜態檔案。
 		if err := p.Push("/example.png"); err != nil {
 			return "Push 檔案時發生錯誤！"
